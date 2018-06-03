@@ -49,7 +49,6 @@ typedef int  (*NvAPI_GPU_GetUsages_t)(int *handle, unsigned int *usages);
 //void MainClient::GetLoad()
 void GetLoad(MainWindow* M)
 {
-    bool nvapi = false;
     HMODULE hmod = LoadLibraryA("nvapi.dll");
     if (hmod == NULL)
     {
@@ -91,10 +90,10 @@ void GetLoad(MainWindow* M)
 
     (*NvAPI_EnumPhysicalGPUs)(gpuHandles, &gpuCount);
 
-    while (true)
+    while (!M->stopped)
     {
         // CPU
-        M->SetCPU(100 * GetCPULoad());
+        M->SetCPU(roundf(100.0 * GetCPULoad()));
 
         // GPU
         (*NvAPI_GPU_GetUsages)(gpuHandles[0], gpuUsages);
@@ -106,7 +105,7 @@ void GetLoad(MainWindow* M)
         GlobalMemoryStatusEx(&statex);
         M->SetRAM(statex.dwMemoryLoad);
 
-        Sleep(1000);
+        Sleep(500);
     }
 }
 
@@ -127,11 +126,18 @@ MainWindow::MainWindow(QWidget *parent) :
     gpu = new Graph(112, 45, 311, 31, ui->GPU, this);
     ram = new Graph(112, 85, 311, 31, ui->RAM, this);
 
+    connect(ui->pushButton, SIGNAL(clicked(bool)), SLOT(stop(bool)));
+
+    stopped = false;
     std::thread tload(GetLoad, this);
     tload.detach();
 }
 MainWindow::~MainWindow()
 {
+    delete cpu;
+    delete gpu;
+    delete ram;
+
     delete ui;
 }
 void MainWindow::SetCPU(int val)
@@ -153,6 +159,29 @@ void MainWindow::SetRAM(int val)
     ram->AddValue(val);
 }
 
+void MainWindow::setpos(int w, int h)
+{
+    ui->label_3->setText(QString::number(w));
+    ui->label_4->setText(QString::number(h));
+}
+
+void MainWindow::stop(bool)
+{
+    if (stopped)
+    {
+        ui->pushButton->setText("Stop");
+
+        stopped = false;
+        std::thread tload(GetLoad, this);
+        tload.detach();
+    }
+    else
+    {
+        ui->pushButton->setText("Start");
+        stopped = true;
+    }
+}
+
 void MainWindow::mouseMoveEvent(QMouseEvent *)
 {
     if (cpu->spectrate)
@@ -163,4 +192,16 @@ void MainWindow::mouseMoveEvent(QMouseEvent *)
 
     if (ram->spectrate)
         ram->spectrate = false;
+}
+
+void MainWindow::resizeEvent(QResizeEvent *e)
+{
+    int w = e->size().width() - 123;
+
+    cpu->rs(w, 31);
+    gpu->rs(w, 31);
+    ram->rs(w, 31);
+
+    ui->label->setText(QString::number(cpu->width()));
+    ui->label_2->setText(QString::number(cpu->height()));
 }

@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QtGui>
 #include <QMouseEvent>
+#include <QVector>
 
 class Graph : public QWidget
 {
@@ -13,10 +14,12 @@ public:
     ~Graph();
 
     void AddValue(int);
+    void rs(int w, int h);
     bool spectrate;
 
 private:
-    int values[4000];
+    int* values;
+    int arrsize;
     int last;
     long count;
     int x;

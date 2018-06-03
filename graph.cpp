@@ -6,6 +6,11 @@ Graph::Graph(int x, int y, int w, int h, QLabel* l, QWidget *parent) : QWidget(p
     this->setMouseTracking(true);
     this->show();
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, Qt::white);
+    this->setAutoFillBackground(true);
+    this->setPalette(palette);
+
     val = l;
     graph = new QPixmap(w, h);
     paint = new QPainter;
@@ -17,57 +22,68 @@ Graph::Graph(int x, int y, int w, int h, QLabel* l, QWidget *parent) : QWidget(p
     out->setMouseTracking(true);
     out->show();
 
-    for (last = 0; last < 4000; last++)
-        values[last] = 255;
-    last = 0;
+    arrsize = w * 2;
+    values = new int[arrsize];
+
+    for (last = arrsize - 1; last >= 0; last--)
+        values[last] = 0;
+
     percent = (double)h / 100.0;
     spectrate = false;
     count = 0;
 }
 Graph::~Graph()
 {
-    delete val;
+    delete values;
     delete out;
     delete graph;
     delete paint;
 }
 void Graph::AddValue(int val)
 {
-    if (last > 4000)
+    if (last == arrsize) // с начала
         last = 0;
-    values[last++] = val;
+
+    values[last] = val;
     count++;
     x = out->width();
     y = out->height();
 
     paint->begin(graph);
-    paint->eraseRect(0, 0, out->width(), out->height());
+    paint->eraseRect(0, 0, x, y);
     paint->setPen(QPen(Qt::red, 1));
 
-    int i;
-    int value;
-    for (i = last; i >= 0; i--)
+    for (int i = last; i >= 0; i--) // от last до начала
     {
-        value = values[i];
-        if (value != 255)
+        int value = values[i];
+        if (value > 0)
+            paint->drawLine(x,
+                            y - percent * value,
+                            x--,
+                            y);
+    }
+    for (int i = arrsize; i >= last; i--) // от конца до last
+    {
+        int value = values[i];
+        if (value > 0)
             paint->drawLine(x, y - percent * value, x--, y);
     }
-    for (i = 49; i >= last; i--)
-    {
-        value = values[i];
-        if (value != 255)
-            paint->drawLine(x, y - percent * value, x--, y);
-    }
-
+    last++;
 
     paint->end();
     out->setPixmap(*graph);
 }
+void Graph::rs(int w, int h)
+{
+    this->resize(w, h);
+    graph = new QPixmap(w, h);
+    out->resize(w, h);
+}
 
-
-
+#include "mainwindow.h"
 void Graph::mouseMoveEvent(QMouseEvent* e)
 {
+    ((MainWindow*)parent())->setpos(e->x(), e->y());
     spectrate = true;
 
     if (e->x() < 0 || e->x() > out->width() || e->y() < 0 || e->y() > out->height())
@@ -80,12 +96,13 @@ void Graph::mouseMoveEvent(QMouseEvent* e)
     if (pos > count)
         return;
 
-    if (pos > last)
+    if (pos <= last)
     {
-        pos -= last + 3;
-        val->setText("@ " + QString::number(values[4000 - pos]));
+        val->setText("@ " + QString::number(values[last - pos]));
     }
     else
-        val->setText("@ " + QString::number(values[last - pos - 3]));
+    {
+        val->setText("@ " + QString::number(values[arrsize - last - pos]));
+    }
 }
 

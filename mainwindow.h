@@ -4,6 +4,7 @@
 #include "graph.h"
 #include <QMainWindow>
 
+class Graph;
 namespace Ui {
 class MainWindow;
 }
@@ -20,6 +21,9 @@ public:
     void SetGPU(unsigned int);
     void SetRAM(int);
 
+    void setpos(int w, int h);
+    bool stopped;
+
 private:
     Ui::MainWindow *ui;
 
@@ -29,6 +33,10 @@ private:
 
 protected:
     virtual void mouseMoveEvent(QMouseEvent*);
+    virtual void resizeEvent(QResizeEvent*);
+
+private slots:
+    void stop(bool);
 };
 
 #endif // MAINWINDOW_H
