@@ -120,11 +120,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    this->setMouseTracking(true);
+	this->setMouseTracking(true);
 
-    cpu = new Graph(112, 5, 311, 31, ui->CPU, this);
-    gpu = new Graph(112, 45, 311, 31, ui->GPU, this);
-    ram = new Graph(112, 85, 311, 31, ui->RAM, this);
+	cpu = new Graph(112, 9, 311, 31, ui->CPU, this);
+	gpu = new Graph(112, 45, 311, 31, ui->GPU, this);
+	ram = new Graph(112, 85, 311, 31, ui->RAM, this);
 
     connect(ui->pushButton, SIGNAL(clicked(bool)), SLOT(stop(bool)));
 

@@ -61,12 +61,16 @@ void Graph::AddValue(int val)
                             y - percent * value,
                             x--,
                             y);
+		else
+			x--;
     }
     for (int i = arrsize; i >= last; i--) // от конца до last
     {
         int value = values[i];
         if (value > 0)
             paint->drawLine(x, y - percent * value, x--, y);
+		else
+			x--;
     }
     last++;
 
